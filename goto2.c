@@ -14,10 +14,12 @@ int main(int argc, char** argv) {
 
   char needle[64] = "";
   int needle_len = 0;
+  system("tput sc >&2");
+  fprintf(stderr, "\e[?25l");  // Hide cursor.
 
   while (1) {
-    fprintf(stderr, "\e[G");  // Move to column 0.
-    fprintf(stderr, "\e[2K");  // Clear line.
+    system("tput ed >&2");
+    system("tput rc >&2");
     fprintf(stderr, "goto2: ");
     int remain = 0;
     for (int i = 0; line[i]; i++) {
@@ -50,8 +52,8 @@ int main(int argc, char** argv) {
     }
   }
 
-  fprintf(stderr, "\e[G");  // Move to column 0.
-  fprintf(stderr, "\e[2K");  // Clear line.
+  system("tput ed >&2");
+  system("tput rc >&2");
   fprintf(stderr, "\e[?25h");  // Show cursor.
   return 0;
 }
