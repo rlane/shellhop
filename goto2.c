@@ -12,10 +12,6 @@ int main(int argc, char** argv) {
   static char buf[BUFSIZ];
   setbuf(stderr, buf);
 
-  fprintf(stderr, "\e[?25l");  // Hide cursor.
-  fprintf(stderr, "goto2: %s", line);
-  fflush(stderr);
-
   char needle[64] = "";
   int needle_len = 0;
 
