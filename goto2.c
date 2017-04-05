@@ -19,7 +19,6 @@ int main(int argc, char** argv) {
 
   while (1) {
     fprintf(stderr, "\e[u");  // Restore cursor.
-    fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
     fprintf(stderr, "goto2: ");
     int remain = 0;
     for (int i = 0; line[i]; i++) {
@@ -33,6 +32,7 @@ int main(int argc, char** argv) {
         fputc(line[i], stderr);
       }
     }
+    fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
     fflush(stderr);
     char c = getchar();
     if (c == '\r') {
