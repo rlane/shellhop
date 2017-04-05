@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
   static char buf[BUFSIZ];
   setbuf(stderr, buf);
 
-  char needle[64] = "";
+  char needle[BUFSIZ] = "";
   int needle_len = 0;
   fprintf(stderr, "\e[s");  // Save cursor.
   fprintf(stderr, "\e[?25l");  // Hide cursor.
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
       }
     } else if (c == '\e') {
       break;
-    } else if (needle_len + 1< sizeof(needle)) {
+    } else if (needle_len + 1 < sizeof(needle)) {
       needle[needle_len++] = c;
     }
   }
