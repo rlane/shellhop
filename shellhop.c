@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
   while (1) {
     fprintf(stderr, "\e[u");  // Restore cursor.
-    fprintf(stderr, "goto2: ");
+    fprintf(stderr, "(shellhop): ");
     int remain = 0;
     for (int i = 0; line[i]; i++) {
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
