@@ -1,13 +1,42 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
+
+const char* bash_source =
+  "function _shellhop {\n"
+  "  READLINE_POINT=$(shellhop \"$READLINE_LINE\");\n"
+  "};\n"
+  "bind '\"\\C-xS0\":beginning-of-line';\n"
+  "bind -x '\"\\C-xS1\":\"_shellhop\"';\n"
+  "bind '\"\\C-x\\C-f\":\"\\C-xS0\\C-xS1\"';\n";
+
+void usage(const char* name) {
+  fprintf(stderr, "usage: %s -b|LINE\n", name);
+}
 
 int main(int argc, char** argv) {
-  if (argc < 2) {
-    fprintf(stderr, "usage: %s LINE\n", argv[0]);
+  int opt;
+  while ((opt = getopt(argc, argv, "bh")) != -1) {
+    switch (opt) {
+    case 'b':
+      printf("%s", bash_source);
+      return 0;
+    case 'h':
+      usage(argv[0]);
+      return 0;
+    default:
+      usage(argv[0]);
+      return 1;
+    }
+  }
+
+  if (argc - optind <= 0) {
+    usage(argv[0]);
     return 1;
   }
-  const char* line = argv[1];
+
+  const char* line = argv[optind];
 
   static char buf[BUFSIZ];
   setbuf(stderr, buf);
