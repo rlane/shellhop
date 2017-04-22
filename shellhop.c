@@ -1,7 +1,14 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#define _POSIX_C_SOURCE 1
 #include <getopt.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
+
+static void set_raw_mode(void);
 
 const char* bash_source =
   "function _shellhop {\n"
@@ -53,11 +60,17 @@ int main(int argc, char** argv) {
 
   const char* line = argv[optind];
 
+  if (isatty(STDIN_FILENO)) {
+    set_raw_mode();
+  }
+
   static char buf[BUFSIZ];
   setbuf(stderr, buf);
 
   char needle[BUFSIZ] = "";
   int needle_len = 0;
+  int result = -1;
+
   fprintf(stderr, "\e[s");  // Save cursor.
   fprintf(stderr, "\e[?25l");  // Hide cursor.
 
@@ -82,7 +95,7 @@ int main(int argc, char** argv) {
     } else if (c == '\r') {
       char* p = strstr(line, needle);
       if (p) {
-        printf("%d\n", (int)(p - line));
+        result = p - line;
       }
       break;
     } else if (c == 127 /* DEL */) {
@@ -99,5 +112,53 @@ int main(int argc, char** argv) {
   fprintf(stderr, "\e[u");  // Restore cursor.
   fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
   fprintf(stderr, "\e[?25h");  // Show cursor.
+  fflush(stderr);
+
+  if (result != -1) {
+    printf("%d\n", result);
+  }
   return 0;
+}
+
+static struct termios orig_termios;
+
+static void restore_termios(void) {
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) < 0) {
+    perror("tcsetattr");
+    abort();
+  }
+}
+
+static void sigint(int signum) {
+  restore_termios();
+  const char cleanup[] = "\e[u\e[J\e[?25h";
+  int written = 0;
+  while (written < sizeof(cleanup)) {
+    int c = write(STDERR_FILENO, cleanup + written, sizeof(cleanup) - 1 - written);
+    if (c > 0) {
+      written += c;
+    } else {
+      break;
+    }
+  }
+  signal(signum, SIG_DFL);
+  raise(signum);
+}
+
+static void set_raw_mode(void) {
+  if (tcgetattr(STDIN_FILENO, &orig_termios) < 0) {
+    perror("tcgetattr");
+    abort();
+  }
+
+  struct termios raw = orig_termios;
+  raw.c_iflag &= ~ICRNL;
+  raw.c_lflag &= ~(ECHO | ICANON);
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) < 0) {
+    perror("tcsetattr");
+    abort();
+  }
+
+  atexit(restore_termios);
+  signal(SIGINT, sigint);
 }

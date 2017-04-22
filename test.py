@@ -4,6 +4,8 @@ import select
 import subprocess
 import time
 import unittest
+import signal
+import pty
 
 BINARY = './shellhop'
 
@@ -15,14 +17,15 @@ def set_nonblocking(f):
 
 
 def SpawnShellhop(line):
+    master, slave = pty.openpty()
     process = subprocess.Popen(
         [BINARY, line],
-        stdin=subprocess.PIPE,
+        stdin=slave,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     set_nonblocking(process.stdout)
     set_nonblocking(process.stderr)
-    return process
+    return process, os.fdopen(master, 'w', 0)
 
 
 SAVE_CURSOR = '\x1b[s'
@@ -43,15 +46,13 @@ class ShellhopTest(unittest.TestCase):
         self.assertEquals(actual, expected)
 
     def expect_nothing(self, f, timeout=0.01):
-        time.sleep(timeout)
-        try:
+        rfs, _, _ = select.select([f], [], [], timeout)
+        if rfs:
             data = f.read()
-        except IOError, e:
-            data = ''
-        self.assertEquals(data, '')
+            self.assertEquals(data, '')
 
     def test_basic(self):
-        process = SpawnShellhop("abracadabra")
+        process, master = SpawnShellhop("abracadabra")
         self.expect(process.stderr, SAVE_CURSOR)
         self.expect(process.stderr, HIDE_CURSOR)
         self.expect(process.stderr, RESTORE_CURSOR)
@@ -61,7 +62,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Write one character, expect two matches.
-        process.stdin.write('b')
+        master.write('b')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
         self.expect(process.stderr, 'a')
@@ -78,7 +79,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Write two characters, expect redraws for each.
-        process.stdin.write('ra')
+        master.write('ra')
 
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
@@ -108,7 +109,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Write another character and get a unique match.
-        process.stdin.write('c')
+        master.write('c')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
         self.expect(process.stderr, 'a')
@@ -121,7 +122,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Hit enter.
-        process.stdin.write('\r')
+        master.write('\r')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, CLEAR)
         self.expect(process.stderr, SHOW_CURSOR)
@@ -130,7 +131,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
     def test_delete(self):
-        process = SpawnShellhop("abc")
+        process, master = SpawnShellhop("abc")
         self.expect(process.stderr, SAVE_CURSOR)
         self.expect(process.stderr, HIDE_CURSOR)
         self.expect(process.stderr, RESTORE_CURSOR)
@@ -140,7 +141,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Hit delete with no text.
-        process.stdin.write('\x7f')
+        master.write('\x7f')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
         self.expect(process.stderr, 'abc')
@@ -149,7 +150,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Write a character.
-        process.stdin.write('b')
+        master.write('b')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
         self.expect(process.stderr, 'a')
@@ -162,7 +163,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Hit delete.
-        process.stdin.write('\x7f')
+        master.write('\x7f')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, '(shellhop): ')
         self.expect(process.stderr, 'abc')
@@ -171,7 +172,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
     def test_empty_line(self):
-        process = SpawnShellhop("abc")
+        process, master = SpawnShellhop("abc")
         self.expect(process.stderr, SAVE_CURSOR)
         self.expect(process.stderr, HIDE_CURSOR)
         self.expect(process.stderr, RESTORE_CURSOR)
@@ -181,13 +182,31 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
         # Hit enter.
-        process.stdin.write('\r')
+        master.write('\r')
         self.expect(process.stderr, RESTORE_CURSOR)
         self.expect(process.stderr, CLEAR)
         self.expect(process.stderr, SHOW_CURSOR)
         self.expect(process.stdout, '0\n')
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
+
+    def test_sigint(self):
+        process, master = SpawnShellhop("abc")
+        self.expect(process.stderr, SAVE_CURSOR)
+        self.expect(process.stderr, HIDE_CURSOR)
+        self.expect(process.stderr, RESTORE_CURSOR)
+        self.expect(process.stderr, '(shellhop): abc')
+        self.expect(process.stderr, CLEAR)
+        self.expect_nothing(process.stderr)
+        self.expect_nothing(process.stdout)
+
+        os.kill(process.pid, signal.SIGINT)
+        self.expect(process.stderr, RESTORE_CURSOR)
+        self.expect(process.stderr, CLEAR)
+        self.expect(process.stderr, SHOW_CURSOR)
+        self.expect_nothing(process.stderr)
+        self.expect_nothing(process.stdout)
+        process.wait()
 
     def test_bash_source(self):
         script = """\
@@ -199,12 +218,12 @@ bind -x \'"\\C-xS1":"_shellhop"\';
 bind \'"\\C-x\\C-f":"\\C-xS0\\C-xS1"\';
 """
 
-        process = SpawnShellhop("-b")
+        process, master = SpawnShellhop("-b")
         self.expect(process.stdout, script)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
 
-        process = SpawnShellhop("--bash")
+        process, master = SpawnShellhop("--bash")
         self.expect(process.stdout, script)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
@@ -220,12 +239,12 @@ match to stdout.
   -h, --help  display this help and exit
 """
 
-        process = SpawnShellhop("-h")
+        process, master = SpawnShellhop("-h")
         self.expect(process.stderr, help_text)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
 
-        process = SpawnShellhop("--help")
+        process, master = SpawnShellhop("--help")
         self.expect(process.stderr, help_text)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
