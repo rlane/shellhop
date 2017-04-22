@@ -4,6 +4,8 @@ Navigate long command lines with incremental search.
 
 ## Installation
 
+Build shellhop:
+
     make
 
 Add this to your bashrc:
