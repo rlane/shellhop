@@ -190,22 +190,42 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(process.stdout)
 
     def test_bash_source(self):
-        process = SpawnShellhop("-b")
-        self.expect(process.stdout, """\
+        script = """\
 function _shellhop {
   READLINE_POINT=$(shellhop "$READLINE_LINE");
 };
 bind \'"\\C-xS0":beginning-of-line\';
 bind -x \'"\\C-xS1":"_shellhop"\';
 bind \'"\\C-x\\C-f":"\\C-xS0\\C-xS1"\';
-""")
+"""
+
+        process = SpawnShellhop("-b")
+        self.expect(process.stdout, script)
+        self.expect_nothing(process.stderr)
+        self.expect_nothing(process.stdout)
+
+        process = SpawnShellhop("--bash")
+        self.expect(process.stdout, script)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)
 
     def test_help(self):
+        help_text = """\
+usage: ./shellhop [OPTION]... LINE
+
+Do an incremental search on the given line and write the index of the first
+match to stdout.
+
+  -b, --bash  output Bash shell commands to stdout
+  -h, --help  display this help and exit
+"""
+
         process = SpawnShellhop("-h")
-        self.expect(process.stderr, """\
-usage: ./shellhop -b|LINE
-""")
+        self.expect(process.stderr, help_text)
+        self.expect_nothing(process.stderr)
+        self.expect_nothing(process.stdout)
+
+        process = SpawnShellhop("--help")
+        self.expect(process.stderr, help_text)
         self.expect_nothing(process.stderr)
         self.expect_nothing(process.stdout)

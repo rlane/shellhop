@@ -11,13 +11,28 @@ const char* bash_source =
   "bind -x '\"\\C-xS1\":\"_shellhop\"';\n"
   "bind '\"\\C-x\\C-f\":\"\\C-xS0\\C-xS1\"';\n";
 
+struct option options[] = {
+  { "help", 0, NULL, 'h' },
+  { "bash", 0, NULL, 'b' },
+  { NULL },
+};
+
 void usage(const char* name) {
-  fprintf(stderr, "usage: %s -b|LINE\n", name);
+  fprintf(
+      stderr,
+      "usage: %s [OPTION]... LINE\n"
+      "\n"
+      "Do an incremental search on the given line and write the index of the first\n"
+      "match to stdout.\n"
+      "\n"
+      "  -b, --bash  output Bash shell commands to stdout\n"
+      "  -h, --help  display this help and exit\n",
+      name);
 }
 
 int main(int argc, char** argv) {
   int opt;
-  while ((opt = getopt(argc, argv, "bh")) != -1) {
+  while ((opt = getopt_long(argc, argv, "bh", options, NULL)) != -1) {
     switch (opt) {
     case 'b':
       printf("%s", bash_source);
