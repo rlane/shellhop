@@ -259,3 +259,6 @@ match to stdout.
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
         self.assertEquals(process.wait(), 0)
+
+if __name__ == "__main__":
+    unittest.main()
