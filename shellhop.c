@@ -52,19 +52,19 @@ int main(int argc, char** argv) {
     int remain = 0;
     for (int i = 0; line[i]; i++) {
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
-        fprintf(stderr, "\e[4;7m%c\e[0m", line[i]);  // Reverse video, underline.
-        remain = needle_len - 1;
-      } else if (remain > 0) {
-        fprintf(stderr, "\e[7m%c\e[0m", line[i]);  // Reverse video.
-        remain--;
-      } else {
-        fputc(line[i], stderr);
+        fprintf(stderr, "\e[7m");  // Reverse video.
+        remain = needle_len;
+      } else if (remain > 0 && --remain == 0) {
+        fprintf(stderr, "\e[0m");  // Normal.
       }
+      fputc(line[i], stderr);
     }
     fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
     fflush(stderr);
-    char c = getchar();
-    if (c == '\r') {
+    int c = getchar();
+    if (c < 0) {
+      return 1;
+    } else if (c == '\r') {
       char* p = strstr(line, needle);
       if (p) {
         printf("%d\n", (int)(p - line));
