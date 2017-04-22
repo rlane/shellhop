@@ -131,6 +131,8 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
+        self.assertEquals(process.wait(), 0)
+
     def test_delete(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
         self.expect(stderr, SAVE_CURSOR)
@@ -172,6 +174,8 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
+        process.kill()
+
     def test_empty_line(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
         self.expect(stderr, SAVE_CURSOR)
@@ -191,6 +195,8 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
+        self.assertEquals(process.wait(), 0)
+
     def test_sigint(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
         self.expect(stderr, SAVE_CURSOR)
@@ -207,7 +213,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect(stderr, SHOW_CURSOR)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
-        process.wait()
+        self.assertEquals(process.wait(), -signal.SIGINT)
 
     def test_bash_source(self):
         script = """\
@@ -223,11 +229,13 @@ bind \'"\\C-x\\C-f":"\\C-xS0\\C-xS1"\';
         self.expect(stdout, script)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
 
         process, stdin, stdout, stderr = SpawnShellhop("--bash")
         self.expect(stdout, script)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
 
     def test_help(self):
         help_text = """\
@@ -244,8 +252,10 @@ match to stdout.
         self.expect(stderr, help_text)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
 
         process, stdin, stdout, stderr = SpawnShellhop("--help")
         self.expect(stderr, help_text)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
