@@ -295,6 +295,37 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stdout)
         self.assertEquals(process.wait(), -signal.SIGINT)
 
+    def test_escape(self):
+        process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, SAVE_CURSOR)
+        self.expect(stderr, HIDE_CURSOR)
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): abc')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Write a matching character.
+        stdin.write('b')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): ')
+        self.expect(stderr, 'a')
+        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, 'b')
+        self.expect(stderr, NORMAL)
+        self.expect(stderr, 'c')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Hit escape.
+        stdin.write('\x1b')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, CLEAR)
+        self.expect(stderr, SHOW_CURSOR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
     def test_bash_source(self):
         script = """\
 function _shellhop {
