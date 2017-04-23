@@ -2,6 +2,8 @@
 
 Navigate long command lines with incremental search.
 
+![shellhop demo](http://i.imgur.com/9o8S8Uu.gif)
+
 ## Installation
 
 Build shellhop:
@@ -14,7 +16,7 @@ Add this to your bashrc:
 
 ## Usage
 
-When editing a command line, type <kbd>Ctrl-x f</kbd>. You'll see a
+When editing a command line, type <kbd>Ctrl-x Ctrl-f</kbd>. You'll see a
 `(shellhop)` prompt followed by the line. Start typing the text at the location
 you wish to move the cursor to. Matches will be highlighted as you type. When
 there is a unique match, hit <kbd>Enter</kbd> to accept it. Shellhop will exit
