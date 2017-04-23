@@ -146,7 +146,7 @@ class ShellhopTest(unittest.TestCase):
 
         self.assertEquals(process.wait(), 0)
 
-    def test_delete(self):
+    def test_backspace(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
@@ -156,7 +156,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
-        # Hit delete with no text.
+        # Hit backspace with no text.
         stdin.write('\x7f')
         self.expect(stderr, RESTORE_CURSOR)
         self.expect(stderr, '(shellhop): ')
@@ -178,7 +178,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
-        # Hit delete.
+        # Hit backspace.
         stdin.write('\x7f')
         self.expect(stderr, RESTORE_CURSOR)
         self.expect(stderr, '(shellhop): ')
