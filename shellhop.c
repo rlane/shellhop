@@ -25,6 +25,14 @@
 
 static void set_raw_mode(void);
 
+static const char* save_cursor = "\e[s";
+static const char* restore_cursor = "\e[u";
+static const char* hide_cursor = "\e[?25l";
+static const char* show_cursor = "\e[?25h";
+static const char* reverse_video = "\e[7m";
+static const char* normal = "\e[0m";
+static const char* clear = "\e[J";
+
 const char* bash_source =
   "function _shellhop {\n"
   "  READLINE_POINT=$(shellhop \"$READLINE_LINE\");\n"
@@ -86,23 +94,23 @@ int main(int argc, char** argv) {
   int needle_len = 0;
   int result = -1;
 
-  fprintf(stderr, "\e[s");  // Save cursor.
-  fprintf(stderr, "\e[?25l");  // Hide cursor.
+  fputs(save_cursor, stderr);
+  fputs(hide_cursor, stderr);
 
   while (1) {
-    fprintf(stderr, "\e[u");  // Restore cursor.
+    fputs(restore_cursor, stderr);
     fprintf(stderr, "(shellhop): ");
     int remain = 0;
     for (int i = 0; line[i]; i++) {
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
-        fprintf(stderr, "\e[7m");  // Reverse video.
+        fputs(reverse_video, stderr);
         remain = needle_len;
       } else if (remain > 0 && --remain == 0) {
-        fprintf(stderr, "\e[0m");  // Normal.
+        fputs(normal, stderr);
       }
       fputc(line[i], stderr);
     }
-    fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
+    fputs(clear, stderr);
     fflush(stderr);
     int c = getchar();
     if (c < 0) {
@@ -127,9 +135,9 @@ int main(int argc, char** argv) {
     }
   }
 
-  fprintf(stderr, "\e[u");  // Restore cursor.
-  fprintf(stderr, "\e[J");  // Clear from cursor to end of screen.
-  fprintf(stderr, "\e[?25h");  // Show cursor.
+  fputs(restore_cursor, stderr);
+  fputs(clear, stderr);
+  fputs(show_cursor, stderr);
   fflush(stderr);
 
   if (result != -1) {
@@ -147,18 +155,24 @@ static void restore_termios(void) {
   }
 }
 
-static void sigint(int signum) {
-  restore_termios();
-  const char cleanup[] = "\e[u\e[J\e[?25h";
+static void signal_write(const char* str) {
+  int n = strlen(str);
   int written = 0;
-  while (written < sizeof(cleanup)) {
-    int c = write(STDERR_FILENO, cleanup + written, sizeof(cleanup) - 1 - written);
+  while (written < n) {
+    int c = write(STDERR_FILENO, str + written, n - written);
     if (c > 0) {
       written += c;
     } else {
-      break;
+      return;
     }
   }
+}
+
+static void sigint(int signum) {
+  restore_termios();
+  signal_write(restore_cursor);
+  signal_write(clear);
+  signal_write(show_cursor);
   signal(signum, SIG_DFL);
   raise(signum);
 }
