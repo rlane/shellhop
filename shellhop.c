@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 static void set_raw_mode(void);
 
@@ -33,17 +34,18 @@ static const char* reverse_video = "\e[7m";
 static const char* normal = "\e[0m";
 static const char* clear = "\e[J";
 
-const char* bash_source =
+const char* bash_template =
   "function _shellhop {\n"
   "  READLINE_POINT=$(shellhop \"$READLINE_LINE\");\n"
   "};\n"
   "bind '\"\\C-xS0\":beginning-of-line';\n"
   "bind -x '\"\\C-xS1\":\"_shellhop\"';\n"
-  "bind '\"\\C-x\\C-f\":\"\\C-xS0\\C-xS1\"';\n";
+  "bind '\"%s\":\"\\C-xS0\\C-xS1\"';\n";
 
 struct option options[] = {
   { "help", 0, NULL, 'h' },
   { "bash", 0, NULL, 'b' },
+  { "key", 1, NULL, 'k' },
   { NULL },
 };
 
@@ -55,18 +57,24 @@ void usage(const char* name) {
       "Do an incremental search on the given line and write the index of the first\n"
       "match to stdout.\n"
       "\n"
-      "  -b, --bash  output Bash shell commands to stdout\n"
-      "  -h, --help  display this help and exit\n",
+      "  -b, --bash     output Bash shell commands to stdout\n"
+      "  -k, --key=KEY  specify a key for --bash\n"
+      "  -h, --help     display this help and exit\n",
       name);
 }
 
 int main(int argc, char** argv) {
+  bool print_bash_source = false;
+  const char* key = "\\C-x\\C-f";
   int opt;
-  while ((opt = getopt_long(argc, argv, "bh", options, NULL)) != -1) {
+  while ((opt = getopt_long(argc, argv, "bhk:", options, NULL)) != -1) {
     switch (opt) {
     case 'b':
-      printf("%s", bash_source);
-      return 0;
+      print_bash_source = true;
+      break;
+    case 'k':
+      key = optarg;
+      break;
     case 'h':
       usage(argv[0]);
       return 0;
@@ -74,6 +82,11 @@ int main(int argc, char** argv) {
       usage(argv[0]);
       return 1;
     }
+  }
+
+  if (print_bash_source) {
+      printf(bash_template, key);
+      return 0;
   }
 
   if (argc - optind <= 0) {

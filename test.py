@@ -29,10 +29,12 @@ def set_nonblocking(f):
     fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
 
-def SpawnShellhop(line):
+def SpawnShellhop(argv):
+    if isinstance(argv, str):
+        argv = [argv]
     master, slave = pty.openpty()
     process = subprocess.Popen(
-        [BINARY, line],
+        [BINARY] + argv,
         stdin=slave,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
@@ -327,14 +329,14 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stdout)
 
     def test_bash_source(self):
-        script = """\
+        script = r"""
 function _shellhop {
   READLINE_POINT=$(shellhop "$READLINE_LINE");
 };
-bind \'"\\C-xS0":beginning-of-line\';
-bind -x \'"\\C-xS1":"_shellhop"\';
-bind \'"\\C-x\\C-f":"\\C-xS0\\C-xS1"\';
-"""
+bind '"\C-xS0":beginning-of-line';
+bind -x '"\C-xS1":"_shellhop"';
+bind '"\C-x\C-f":"\C-xS0\C-xS1"';
+"""[1:]
 
         process, stdin, stdout, stderr = SpawnShellhop("-b")
         self.expect(stdout, script)
@@ -348,6 +350,28 @@ bind \'"\\C-x\\C-f":"\\C-xS0\\C-xS1"\';
         self.expect_nothing(stdout)
         self.assertEquals(process.wait(), 0)
 
+    def test_bash_source_with_key(self):
+        script = r"""
+function _shellhop {
+  READLINE_POINT=$(shellhop "$READLINE_LINE");
+};
+bind '"\C-xS0":beginning-of-line';
+bind -x '"\C-xS1":"_shellhop"';
+bind '"\C-j":"\C-xS0\C-xS1"';
+"""[1:]
+
+        process, stdin, stdout, stderr = SpawnShellhop(["-b", "-k", "\\C-j"])
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
+        process, stdin, stdout, stderr = SpawnShellhop(["--bash", "--key", "\\C-j"])
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
     def test_help(self):
         help_text = """\
 usage: ./shellhop [OPTION]... LINE
@@ -355,8 +379,9 @@ usage: ./shellhop [OPTION]... LINE
 Do an incremental search on the given line and write the index of the first
 match to stdout.
 
-  -b, --bash  output Bash shell commands to stdout
-  -h, --help  display this help and exit
+  -b, --bash     output Bash shell commands to stdout
+  -k, --key=KEY  specify a key for --bash
+  -h, --help     display this help and exit
 """
 
         process, stdin, stdout, stderr = SpawnShellhop("-h")

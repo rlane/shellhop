@@ -16,6 +16,11 @@ Add this to your bashrc:
 
     eval $(/path/to/shellhop --bash)
 
+You can change the keybinding (default <kbd>Ctrl-x Ctrl-f</kbd>) with the
+`--key` option:
+
+    eval $(/path/to/shellhop --bash --key \\C-j)
+
 ## Usage
 
 When editing a command line, type <kbd>Ctrl-x Ctrl-f</kbd>. You'll see a
