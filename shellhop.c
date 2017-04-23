@@ -121,6 +121,9 @@ int main(int argc, char** argv) {
       break;
     } else if (needle_len + 1 < sizeof(needle)) {
       needle[needle_len++] = c;
+      if (!strstr(line, needle)) {
+        needle[--needle_len] = '\0';
+      }
     }
   }
 

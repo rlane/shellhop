@@ -210,6 +210,73 @@ class ShellhopTest(unittest.TestCase):
 
         self.assertEquals(process.wait(), 0)
 
+    def test_nonmatching(self):
+        process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, SAVE_CURSOR)
+        self.expect(stderr, HIDE_CURSOR)
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): abc')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Write a nonmatching character. It should be ignored.
+        stdin.write('d')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): ')
+        self.expect(stderr, 'abc')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Write a matching character.
+        stdin.write('b')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): ')
+        self.expect(stderr, 'a')
+        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, 'b')
+        self.expect(stderr, NORMAL)
+        self.expect(stderr, 'c')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Write a nonmatching character. It should be ignored.
+        stdin.write('e')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): ')
+        self.expect(stderr, 'a')
+        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, 'b')
+        self.expect(stderr, NORMAL)
+        self.expect(stderr, 'c')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Write a matching character.
+        stdin.write('c')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, '(shellhop): ')
+        self.expect(stderr, 'a')
+        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, 'bc')
+        self.expect(stderr, CLEAR)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        # Hit enter.
+        stdin.write('\r')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, CLEAR)
+        self.expect(stderr, SHOW_CURSOR)
+        self.expect(stdout, '1\n')
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        self.assertEquals(process.wait(), 0)
+
     def test_sigint(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
         self.expect(stderr, SAVE_CURSOR)
