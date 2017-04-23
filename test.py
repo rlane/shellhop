@@ -57,9 +57,12 @@ CLEAR = '\x1b[J'
 class ShellhopTest(unittest.TestCase):
 
     def expect(self, f, expected, timeout=1.0):
-        rfs, _, _ = select.select([f], [], [], timeout)
-        self.assertEqual(rfs, [f])
-        actual = f.read(len(expected))
+        actual = ''
+        while len(actual) < len(expected):
+            rfs, _, _ = select.select([f], [], [], timeout)
+            if not rfs:
+                break
+            actual += f.read(len(expected))
         self.assertEquals(actual, expected)
 
     def expect_nothing(self, f, timeout=0.01):
