@@ -8,6 +8,8 @@ Navigate long command lines with incremental search.
 
 Build shellhop:
 
+    git clone git://github.com/rlane/shellhop
+    cd shellhop
     make
 
 Add this to your bashrc:
