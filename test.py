@@ -44,6 +44,7 @@ def SpawnShellhop(argv):
     return process, stdin, process.stdout, process.stderr
 
 
+BEGINNING_OF_LINE = '\x1b[G'
 SAVE_CURSOR = '\x1b[s'
 RESTORE_CURSOR = '\x1b[u'
 HIDE_CURSOR = '\x1b[?25l'
@@ -69,6 +70,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_basic(self):
         process, stdin, stdout, stderr = SpawnShellhop("abracadabra")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)
@@ -150,6 +152,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_backspace(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)
@@ -193,6 +196,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_empty_line(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)
@@ -214,6 +218,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_nonmatching(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)
@@ -281,6 +286,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_sigint(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)
@@ -299,6 +305,7 @@ class ShellhopTest(unittest.TestCase):
 
     def test_escape(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
+        self.expect(stderr, BEGINNING_OF_LINE)
         self.expect(stderr, SAVE_CURSOR)
         self.expect(stderr, HIDE_CURSOR)
         self.expect(stderr, RESTORE_CURSOR)

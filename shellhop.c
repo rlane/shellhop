@@ -26,6 +26,7 @@
 
 static void set_raw_mode(void);
 
+static const char* beginning_of_line = "\e[G";
 static const char* save_cursor = "\e[s";
 static const char* restore_cursor = "\e[u";
 static const char* hide_cursor = "\e[?25l";
@@ -107,6 +108,7 @@ int main(int argc, char** argv) {
   int needle_len = 0;
   int result = -1;
 
+  fputs(beginning_of_line, stderr);
   fputs(save_cursor, stderr);
   fputs(hide_cursor, stderr);
 
