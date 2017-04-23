@@ -43,9 +43,18 @@ const char* bash_template =
   "bind -x '\"\\C-xS1\":\"_shellhop\"';\n"
   "bind '\"%s\":\"\\C-xS0\\C-xS1\"';\n";
 
+const char* zsh_template =
+  "function _shellhop {\n"
+  "  CURSOR=$(shellhop \"$BUFFER\" </dev/tty);\n"
+  "  zle redisplay;\n"
+  "};\n"
+  "zle -N shellhop _shellhop;\n"
+  "bindkey '%s' shellhop;\n";
+
 struct option options[] = {
   { "help", 0, NULL, 'h' },
   { "bash", 0, NULL, 'b' },
+  { "zsh", 0, NULL, 'z' },
   { "key", 1, NULL, 'k' },
   { NULL },
 };
@@ -59,19 +68,24 @@ void usage(const char* name) {
       "match to stdout.\n"
       "\n"
       "  -b, --bash     output Bash shell commands to stdout\n"
-      "  -k, --key=KEY  specify a key for --bash\n"
+      "  -z, --zsh      output Zsh shell commands to stdout\n"
+      "  -k, --key=KEY  specify a key for --bash and --zsh\n"
       "  -h, --help     display this help and exit\n",
       name);
 }
 
 int main(int argc, char** argv) {
   bool print_bash_source = false;
+  bool print_zsh_source = false;
   const char* key = "\\C-x\\C-f";
   int opt;
-  while ((opt = getopt_long(argc, argv, "bhk:", options, NULL)) != -1) {
+  while ((opt = getopt_long(argc, argv, "bzhk:", options, NULL)) != -1) {
     switch (opt) {
     case 'b':
       print_bash_source = true;
+      break;
+    case 'z':
+      print_zsh_source = true;
       break;
     case 'k':
       key = optarg;
@@ -87,6 +101,9 @@ int main(int argc, char** argv) {
 
   if (print_bash_source) {
       printf(bash_template, key);
+      return 0;
+  } else if (print_zsh_source) {
+      printf(zsh_template, key);
       return 0;
   }
 

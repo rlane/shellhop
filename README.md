@@ -21,6 +21,10 @@ You can change the keybinding (default <kbd>Ctrl-x Ctrl-f</kbd>) with the
 
     eval $(/path/to/shellhop --bash --key \\C-j)
 
+Zsh is also supported:
+
+    eval $(/path/to/shellhop --zsh)
+
 ## Usage
 
 When editing a command line, type <kbd>Ctrl-x Ctrl-f</kbd>. You'll see a
@@ -42,6 +46,7 @@ Be sure to add a new test if contributing a feature or bugfix.
 ## Related
 
 - [goto](https://github.com/Fakerr/goto)
+- [zsh-vi-search](https://github.com/soheilpro/zsh-vi-search)
 
 ## License
 

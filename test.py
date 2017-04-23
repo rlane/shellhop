@@ -382,6 +382,50 @@ bind '"\C-j":"\C-xS0\C-xS1"';
         self.expect_nothing(stdout)
         self.assertEquals(process.wait(), 0)
 
+    def test_zsh_source(self):
+        script = r"""
+function _shellhop {
+  CURSOR=$(shellhop "$BUFFER" </dev/tty);
+  zle redisplay;
+};
+zle -N shellhop _shellhop;
+bindkey '\C-x\C-f' shellhop;
+"""[1:]
+
+        process, stdin, stdout, stderr = SpawnShellhop("-z")
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
+        process, stdin, stdout, stderr = SpawnShellhop("--zsh")
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
+    def test_zsh_source_with_key(self):
+        script = r"""
+function _shellhop {
+  CURSOR=$(shellhop "$BUFFER" </dev/tty);
+  zle redisplay;
+};
+zle -N shellhop _shellhop;
+bindkey '\C-j' shellhop;
+"""[1:]
+
+        process, stdin, stdout, stderr = SpawnShellhop(["-z", "-k", "\\C-j"])
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
+        process, stdin, stdout, stderr = SpawnShellhop(["--zsh", "--key", "\\C-j"])
+        self.expect(stdout, script)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 0)
+
     def test_help(self):
         help_text = """\
 usage: ./shellhop [OPTION]... LINE
@@ -390,7 +434,8 @@ Do an incremental search on the given line and write the index of the first
 match to stdout.
 
   -b, --bash     output Bash shell commands to stdout
-  -k, --key=KEY  specify a key for --bash
+  -z, --zsh      output Zsh shell commands to stdout
+  -k, --key=KEY  specify a key for --bash and --zsh
   -h, --help     display this help and exit
 """
 
