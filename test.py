@@ -341,7 +341,7 @@ class ShellhopTest(unittest.TestCase):
     def test_bash_source(self):
         script = r"""
 function _shellhop {
-  READLINE_POINT=$(shellhop "$READLINE_LINE");
+  READLINE_POINT=$(./shellhop "$READLINE_LINE");
 };
 bind '"\C-xS0":beginning-of-line';
 bind -x '"\C-xS1":"_shellhop"';
@@ -363,7 +363,7 @@ bind '"\C-x\C-f":"\C-xS0\C-xS1"';
     def test_bash_source_with_key(self):
         script = r"""
 function _shellhop {
-  READLINE_POINT=$(shellhop "$READLINE_LINE");
+  READLINE_POINT=$(./shellhop "$READLINE_LINE");
 };
 bind '"\C-xS0":beginning-of-line';
 bind -x '"\C-xS1":"_shellhop"';
@@ -385,7 +385,7 @@ bind '"\C-j":"\C-xS0\C-xS1"';
     def test_zsh_source(self):
         script = r"""
 function _shellhop {
-  CURSOR=$(shellhop "$BUFFER" </dev/tty);
+  CURSOR=$(./shellhop "$BUFFER" </dev/tty);
   zle redisplay;
 };
 zle -N shellhop _shellhop;
@@ -407,7 +407,7 @@ bindkey '\C-x\C-f' shellhop;
     def test_zsh_source_with_key(self):
         script = r"""
 function _shellhop {
-  CURSOR=$(shellhop "$BUFFER" </dev/tty);
+  CURSOR=$(./shellhop "$BUFFER" </dev/tty);
   zle redisplay;
 };
 zle -N shellhop _shellhop;

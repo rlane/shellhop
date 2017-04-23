@@ -37,7 +37,7 @@ static const char* clear = "\e[J";
 
 const char* bash_template =
   "function _shellhop {\n"
-  "  READLINE_POINT=$(shellhop \"$READLINE_LINE\");\n"
+  "  READLINE_POINT=$(%s \"$READLINE_LINE\");\n"
   "};\n"
   "bind '\"\\C-xS0\":beginning-of-line';\n"
   "bind -x '\"\\C-xS1\":\"_shellhop\"';\n"
@@ -45,7 +45,7 @@ const char* bash_template =
 
 const char* zsh_template =
   "function _shellhop {\n"
-  "  CURSOR=$(shellhop \"$BUFFER\" </dev/tty);\n"
+  "  CURSOR=$(%s \"$BUFFER\" </dev/tty);\n"
   "  zle redisplay;\n"
   "};\n"
   "zle -N shellhop _shellhop;\n"
@@ -100,10 +100,10 @@ int main(int argc, char** argv) {
   }
 
   if (print_bash_source) {
-      printf(bash_template, key);
+      printf(bash_template, argv[0], key);
       return 0;
   } else if (print_zsh_source) {
-      printf(zsh_template, key);
+      printf(zsh_template, argv[0], key);
       return 0;
   }
 
