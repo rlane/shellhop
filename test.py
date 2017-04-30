@@ -50,6 +50,7 @@ RESTORE_CURSOR = '\x1b[u'
 HIDE_CURSOR = '\x1b[?25l'
 SHOW_CURSOR = '\x1b[?25h'
 REVERSE_VIDEO = '\x1b[7m'
+UNDERLINE = '\x1b[4m'
 NORMAL = '\x1b[0m'
 CLEAR = '\x1b[J'
 
@@ -91,7 +92,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect(stderr, 'b')
         self.expect(stderr, NORMAL)
         self.expect(stderr, 'racada')
-        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, UNDERLINE)
         self.expect(stderr, 'b')
         self.expect(stderr, NORMAL)
         self.expect(stderr, 'ra')
@@ -109,7 +110,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect(stderr, 'br')
         self.expect(stderr, NORMAL)
         self.expect(stderr, 'acada')
-        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, UNDERLINE)
         self.expect(stderr, 'br')
         self.expect(stderr, NORMAL)
         self.expect(stderr, 'a')
@@ -122,8 +123,9 @@ class ShellhopTest(unittest.TestCase):
         self.expect(stderr, 'bra')
         self.expect(stderr, NORMAL)
         self.expect(stderr, 'cada')
-        self.expect(stderr, REVERSE_VIDEO)
+        self.expect(stderr, UNDERLINE)
         self.expect(stderr, 'bra')
+        self.expect(stderr, NORMAL)
         self.expect(stderr, CLEAR)
 
         self.expect_nothing(stderr)
@@ -272,6 +274,7 @@ class ShellhopTest(unittest.TestCase):
         self.expect(stderr, 'a')
         self.expect(stderr, REVERSE_VIDEO)
         self.expect(stderr, 'bc')
+        self.expect(stderr, NORMAL)
         self.expect(stderr, CLEAR)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)

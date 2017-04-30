@@ -24,6 +24,13 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+enum graphics {
+  GRAPHICS_NORMAL = 0,
+  GRAPHICS_UNDERLINE = 1 << 0,
+  GRAPHICS_REVERSE_VIDEO = 1 << 1,
+};
+
+static void change_graphics(enum graphics new, enum graphics *old_ptr);
 static void set_raw_mode(void);
 
 static const char* beginning_of_line = "\e[G";
@@ -32,6 +39,7 @@ static const char* restore_cursor = "\e[u";
 static const char* hide_cursor = "\e[?25l";
 static const char* show_cursor = "\e[?25h";
 static const char* reverse_video = "\e[7m";
+static const char* underline = "\e[4m";
 static const char* normal = "\e[0m";
 static const char* clear = "\e[J";
 
@@ -132,16 +140,32 @@ int main(int argc, char** argv) {
   while (1) {
     fputs(restore_cursor, stderr);
     fprintf(stderr, "(shellhop): ");
-    int remain = 0;
+    int reverse_video_remain = 0;
+    int underline_remain = 0;
+    bool first = true;
+    enum graphics cur_graphics = GRAPHICS_NORMAL;
     for (int i = 0; line[i]; i++) {
+      enum graphics new_graphics = GRAPHICS_NORMAL;
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
-        fputs(reverse_video, stderr);
-        remain = needle_len;
-      } else if (remain > 0 && --remain == 0) {
-        fputs(normal, stderr);
+        if (first) {
+          first = false;
+          reverse_video_remain = needle_len;
+        } else {
+          underline_remain = needle_len;
+        }
       }
+      if (underline_remain > 0) {
+        --underline_remain;
+        new_graphics |= GRAPHICS_UNDERLINE;
+      }
+      if (reverse_video_remain > 0) {
+        --reverse_video_remain;
+        new_graphics |= GRAPHICS_REVERSE_VIDEO;
+      }
+      change_graphics(new_graphics, &cur_graphics);
       fputc(line[i], stderr);
     }
+    change_graphics(GRAPHICS_NORMAL, &cur_graphics);
     fputs(clear, stderr);
     fflush(stderr);
     int c = getchar();
@@ -176,6 +200,22 @@ int main(int argc, char** argv) {
     printf("%d\n", result);
   }
   return 0;
+}
+
+static void change_graphics(enum graphics new, enum graphics *old_ptr) {
+  enum graphics old = *old_ptr;
+  *old_ptr = new;
+  if (old != new) {
+    if (old != GRAPHICS_NORMAL) {
+      fputs(normal, stderr);
+    }
+    if (new & GRAPHICS_UNDERLINE) {
+      fputs(underline, stderr);
+    }
+    if (new & GRAPHICS_REVERSE_VIDEO) {
+      fputs(reverse_video, stderr);
+    }
+  }
 }
 
 static struct termios orig_termios;
