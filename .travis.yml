@@ -3,6 +3,9 @@ script: make check COVERAGE=1
 compiler:
   - clang
   - gcc
+os:
+  - linux
+  - osx
 python:
   - "2.7"
 install:
