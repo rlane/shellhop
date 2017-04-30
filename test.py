@@ -197,7 +197,16 @@ class ShellhopTest(unittest.TestCase):
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
 
-        process.kill()
+        # Hit enter.
+        stdin.write('\r')
+        self.expect(stderr, RESTORE_CURSOR)
+        self.expect(stderr, CLEAR)
+        self.expect(stderr, SHOW_CURSOR)
+        self.expect(stdout, '1\n')
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+
+        self.assertEquals(process.wait(), 0)
 
     def test_empty_line(self):
         process, stdin, stdout, stderr = SpawnShellhop("abc")
