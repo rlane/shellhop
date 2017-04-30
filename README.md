@@ -33,6 +33,9 @@ you wish to move the cursor to. Matches will be highlighted as you type. When
 there is a unique match, hit <kbd>Enter</kbd> to accept it. Shellhop will exit
 and leave the cursor in the desired position.
 
+Use <kbd>Ctrl-n</kbd> and <kbd>Ctrl-p</kbd> to cycle between multiple matches.
+The current match will be highlighted and the others underlined.
+
 ## Contributing
 
 Fork the project and send a pull request.

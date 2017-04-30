@@ -31,6 +31,7 @@ enum graphics {
 };
 
 static void change_graphics(enum graphics new, enum graphics *old_ptr);
+static const char* backwards_strstr(const char* haystack, const char* needle, int offset);
 static void set_raw_mode(void);
 
 static const char* beginning_of_line = "\e[G";
@@ -121,7 +122,8 @@ int main(int argc, char** argv) {
   }
 
   const char* line = argv[optind];
-  enum graphics *graphics = calloc(strlen(line), sizeof(graphics[0]));
+  size_t line_len = strlen(line);
+  enum graphics *graphics = calloc(line_len, sizeof(graphics[0]));
 
   if (isatty(STDIN_FILENO)) {
     set_raw_mode();
@@ -132,7 +134,7 @@ int main(int argc, char** argv) {
 
   char needle[BUFSIZ] = "";
   int needle_len = 0;
-  int result = -1;
+  int result = 0;
 
   fputs(beginning_of_line, stderr);
   fputs(save_cursor, stderr);
@@ -143,11 +145,13 @@ int main(int argc, char** argv) {
     int reverse_video_remain = 0;
     int underline_remain = 0;
     bool first = true;
-    for (int i = 0; line[i]; i++) {
+    for (int j = 0; j < line_len; j++) {
+      int i = (result + j) % line_len;
       graphics[i] = GRAPHICS_NORMAL;
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
         if (first) {
           first = false;
+          result = i;
           reverse_video_remain = needle_len;
         } else {
           underline_remain = needle_len;
@@ -167,7 +171,7 @@ int main(int argc, char** argv) {
     fputs(restore_cursor, stderr);
     fprintf(stderr, "(shellhop): ");
     enum graphics cur_graphics = GRAPHICS_NORMAL;
-    for (int i = 0; line[i]; i++) {
+    for (int i = 0; i < line_len; i++) {
       change_graphics(graphics[i], &cur_graphics);
       fputc(line[i], stderr);
     }
@@ -180,18 +184,32 @@ int main(int argc, char** argv) {
     if (c < 0) {
       return 1;
     } else if (c == '\r') {
-      char* p = strstr(line, needle);
-      if (p) {
-        result = p - line;
-      }
       break;
     } else if (c == 127 /* DEL */) {
       if (needle_len > 0) {
         needle[--needle_len] = '\0';
       }
-    } else if (c == '\t') {
-
+    } else if (c == ('n' & 0x1f) /* ctrl-N */) {
+      const char* next = strstr(line + result + 1, needle);
+      if (next == NULL) {
+        next = strstr(line, needle);
+      }
+      if (next != NULL) {
+        result = next - line;
+      }
+    } else if (c == ('p' & 0x1f) /* ctrl-P */) {
+      const char* prev = NULL;
+      if (result > 0) {
+        prev = backwards_strstr(line, needle, result - 1);
+      }
+      if (prev == NULL) {
+        prev = backwards_strstr(line, needle, line_len - 1);
+      }
+      if (prev != NULL) {
+        result = prev - line;
+      }
     } else if (c == '\e') {
+      result = 0;
       break;
     } else if (needle_len + 1 < sizeof(needle)) {
       needle[needle_len++] = c;
@@ -206,9 +224,7 @@ int main(int argc, char** argv) {
   fputs(show_cursor, stderr);
   fflush(stderr);
 
-  if (result != -1) {
-    printf("%d\n", result);
-  }
+  printf("%d\n", result);
   free(graphics);
   return 0;
 }
@@ -227,6 +243,17 @@ static void change_graphics(enum graphics new, enum graphics *old_ptr) {
       fputs(reverse_video, stderr);
     }
   }
+}
+
+static const char*
+backwards_strstr(const char* haystack, const char* needle, int offset) {
+  size_t needle_len = strlen(needle);
+  for (int i = offset; i >= 0; i--) {
+    if (!strncmp(haystack + i, needle, needle_len)) {
+      return haystack + i;
+    }
+  }
+  return NULL;
 }
 
 static struct termios orig_termios;
