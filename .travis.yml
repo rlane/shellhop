@@ -6,6 +6,6 @@ compiler:
 python:
   - "2.7"
 install:
-  - pip install --user cpp-coveralls
+  - pip install --user urllib3[secure] cpp-coveralls
 after_success:
   - coveralls --gcov-options '\-lp' -i $PWD/shellhop.c
