@@ -1,6 +1,7 @@
 # shellhop
 
 [![Build Status](https://travis-ci.org/rlane/shellhop.svg?branch=master)](https://travis-ci.org/rlane/shellhop)
+[![Coverage Status](https://coveralls.io/repos/github/rlane/shellhop/badge.svg?branch=master)](https://coveralls.io/github/rlane/shellhop?branch=master)
 
 Navigate long command lines with incremental search.
 

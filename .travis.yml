@@ -1,5 +1,11 @@
 language: c
-script: make check
+script: make check COVERAGE=1
 compiler:
   - clang
   - gcc
+python:
+  - "2.7"
+install:
+  - pip install --user cpp-coveralls
+after_success:
+  - coveralls --gcov-options '\-lp' -i $PWD/shellhop.c
