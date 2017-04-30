@@ -284,6 +284,10 @@ static void sigint(int signum) {
   signal_write(clear);
   signal_write(show_cursor);
   signal(signum, SIG_DFL);
+#ifdef USE_GCOV
+  void __gcov_flush(void);
+  __gcov_flush();
+#endif
   raise(signum);
 }
 
