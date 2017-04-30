@@ -1,5 +1,7 @@
 # shellhop
 
+[![Build Status](https://travis-ci.org/rlane/shellhop.svg?branch=master)](https://travis-ci.org/rlane/shellhop)
+
 Navigate long command lines with incremental search.
 
 ![shellhop demo](http://i.imgur.com/9o8S8Uu.gif)
