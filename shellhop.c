@@ -121,6 +121,7 @@ int main(int argc, char** argv) {
   }
 
   const char* line = argv[optind];
+  enum graphics *graphics = calloc(strlen(line), sizeof(graphics[0]));
 
   if (isatty(STDIN_FILENO)) {
     set_raw_mode();
@@ -138,14 +139,12 @@ int main(int argc, char** argv) {
   fputs(hide_cursor, stderr);
 
   while (1) {
-    fputs(restore_cursor, stderr);
-    fprintf(stderr, "(shellhop): ");
+    /* Search for needle */
     int reverse_video_remain = 0;
     int underline_remain = 0;
     bool first = true;
-    enum graphics cur_graphics = GRAPHICS_NORMAL;
     for (int i = 0; line[i]; i++) {
-      enum graphics new_graphics = GRAPHICS_NORMAL;
+      graphics[i] = GRAPHICS_NORMAL;
       if (needle_len > 0 && !strncmp(line + i, needle, needle_len)) {
         if (first) {
           first = false;
@@ -156,18 +155,27 @@ int main(int argc, char** argv) {
       }
       if (underline_remain > 0) {
         --underline_remain;
-        new_graphics |= GRAPHICS_UNDERLINE;
+        graphics[i] |= GRAPHICS_UNDERLINE;
       }
       if (reverse_video_remain > 0) {
         --reverse_video_remain;
-        new_graphics |= GRAPHICS_REVERSE_VIDEO;
+        graphics[i] |= GRAPHICS_REVERSE_VIDEO;
       }
-      change_graphics(new_graphics, &cur_graphics);
+    }
+
+    /* Draw prompt */
+    fputs(restore_cursor, stderr);
+    fprintf(stderr, "(shellhop): ");
+    enum graphics cur_graphics = GRAPHICS_NORMAL;
+    for (int i = 0; line[i]; i++) {
+      change_graphics(graphics[i], &cur_graphics);
       fputc(line[i], stderr);
     }
     change_graphics(GRAPHICS_NORMAL, &cur_graphics);
     fputs(clear, stderr);
     fflush(stderr);
+
+    /* Read input */
     int c = getchar();
     if (c < 0) {
       return 1;
@@ -181,6 +189,8 @@ int main(int argc, char** argv) {
       if (needle_len > 0) {
         needle[--needle_len] = '\0';
       }
+    } else if (c == '\t') {
+
     } else if (c == '\e') {
       break;
     } else if (needle_len + 1 < sizeof(needle)) {
@@ -199,6 +209,7 @@ int main(int argc, char** argv) {
   if (result != -1) {
     printf("%d\n", result);
   }
+  free(graphics);
   return 0;
 }
 
