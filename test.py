@@ -627,5 +627,18 @@ match to stdout.
         self.expect_nothing(stdout)
         self.assertEquals(process.wait(), 0)
 
+        process, stdin, stdout, stderr = SpawnShellhop([])
+        self.expect(stderr, help_text)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 1)
+
+        process, stdin, stdout, stderr = SpawnShellhop(["--invalid"])
+        self.expect(stderr, "./shellhop: unrecognized option '--invalid'\n")
+        self.expect(stderr, help_text)
+        self.expect_nothing(stderr)
+        self.expect_nothing(stdout)
+        self.assertEquals(process.wait(), 1)
+
 if __name__ == "__main__":
     unittest.main()
