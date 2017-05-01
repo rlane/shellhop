@@ -11,4 +11,4 @@ python:
 install:
   - pip install --user urllib3[secure] cpp-coveralls
 after_success:
-  - coveralls --gcov-options '\-lp' -i $PWD/shellhop.c
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$CC" == "gcc" ]]; then coveralls --gcov-options '\-lp' -i $PWD/shellhop.c; fi
