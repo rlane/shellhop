@@ -18,6 +18,7 @@ import subprocess
 import time
 import unittest
 import signal
+import platform
 import pty
 
 BINARY = './shellhop'
@@ -634,7 +635,10 @@ match to stdout.
         self.assertEquals(process.wait(), 1)
 
         process, stdin, stdout, stderr = SpawnShellhop(["--invalid"])
-        self.expect(stderr, "./shellhop: unrecognized option '--invalid'\n")
+        if platform.system() == 'Darwin':
+            self.expect(stderr, "shellhop: unrecognized option `--invalid'\n")
+        else:
+            self.expect(stderr, "./shellhop: unrecognized option '--invalid'\n")
         self.expect(stderr, help_text)
         self.expect_nothing(stderr)
         self.expect_nothing(stdout)
