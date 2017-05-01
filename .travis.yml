@@ -3,9 +3,12 @@ script: make check COVERAGE=1
 compiler:
   - clang
   - gcc
+os:
+  - linux
+  - osx
 python:
   - "2.7"
 install:
   - pip install --user urllib3[secure] cpp-coveralls
 after_success:
-  - coveralls --gcov-options '\-lp' -i $PWD/shellhop.c
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$CC" == "gcc" ]]; then coveralls --gcov-options '\-lp' -i $PWD/shellhop.c; fi

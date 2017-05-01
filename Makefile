@@ -1,4 +1,4 @@
-CFLAGS := -Wall -O2 -static -std=c99
+CFLAGS := -Wall -O2 -std=c99
 
 ifeq ($(COVERAGE),1)
 CFLAGS += -fprofile-arcs -ftest-coverage -DUSE_GCOV=1
