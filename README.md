@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/rlane/shellhop.svg?branch=master)](https://travis-ci.org/rlane/shellhop)
 [![Coverage Status](https://coveralls.io/repos/github/rlane/shellhop/badge.svg?branch=master)](https://coveralls.io/github/rlane/shellhop?branch=master)
 
-Navigate long command lines with incremental search.
+Shellhop adds incremental search of your command line to bash and zsh. It's
+similar to <kbd>Ctrl-S</kbd> and <kbd>Ctrl-R</kbd>, but it searches only within
+the current line and highlights all matches.
 
 ![shellhop demo](http://i.imgur.com/9o8S8Uu.gif)
 
@@ -19,10 +21,10 @@ Add this to your bashrc:
 
     eval $(/path/to/shellhop --bash)
 
-You can change the keybinding (default <kbd>Ctrl-x Ctrl-f</kbd>) with the
+You can change the keybinding (default <kbd>Ctrl-X Ctrl-F</kbd>) with the
 `--key` option:
 
-    eval $(/path/to/shellhop --bash --key \\C-j)
+    eval $(/path/to/shellhop --bash --key \\C-S)
 
 Zsh is also supported:
 
@@ -30,13 +32,13 @@ Zsh is also supported:
 
 ## Usage
 
-When editing a command line, type <kbd>Ctrl-x Ctrl-f</kbd>. You'll see a
+When editing a command line, type <kbd>Ctrl-X Ctrl-F</kbd>. You'll see a
 `(shellhop)` prompt followed by the line. Start typing the text at the location
 you wish to move the cursor to. Matches will be highlighted as you type. When
 there is a unique match, hit <kbd>Enter</kbd> to accept it. Shellhop will exit
 and leave the cursor in the desired position.
 
-Use <kbd>Ctrl-n</kbd> and <kbd>Ctrl-p</kbd> to cycle between multiple matches.
+Use <kbd>Ctrl-N</kbd> and <kbd>Ctrl-P</kbd> to cycle between multiple matches.
 The current match will be highlighted and the others underlined.
 
 ## Contributing
